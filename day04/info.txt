@@ -1,0 +1,76 @@
+deployment+ClusterIP
+
+PS C:\Kubernetes> kubectl get pods
+NAME                            READY   STATUS    RESTARTS   AGE
+nginx-deploy-867d4477d7-ch7lx   1/1     Running   0          2m45s
+nginx-deploy-867d4477d7-vw6fh   1/1     Running   0          2m45s
+nginx-deploy-867d4477d7-xfqs6   1/1     Running   0          2m45s
+
+
+PS C:\Kubernetes> kubectl get deployment
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deploy   3/3     3            3           3m16s
+
+
+PS C:\Kubernetes> kubectl get service
+NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+cluster-ip-service   ClusterIP   10.96.26.252   <none>        80/TCP    4m8s
+kubernetes           ClusterIP   10.96.0.1      <none>        443/TCP   2d22h
+
+
+PS C:\Kubernetes> kubectl get endpoints cluster-ip-service
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME                 ENDPOINTS                                      AGE
+cluster-ip-service   10.244.0.42:80,10.244.0.43:80,10.244.0.44:80   4m56s
+
+
+PS C:\Kubernetes> kubectl port-forward service/cluster-ip-service 8080:80
+Forwarding from 127.0.0.1:8080 -> 80
+Forwarding from [::1]:8080 -> 80
+Handling connection for 8080
+Handling connection for 8080
+
+
+================================================================================================
+deployment+ClusterIP+NodePort
+
+PS C:\Kubernetes> kubectl get pods
+NAME                            READY   STATUS    RESTARTS   AGE
+nginx-deploy-867d4477d7-ch7lx   1/1     Running   0          25m
+nginx-deploy-867d4477d7-vw6fh   1/1     Running   0          25m
+nginx-deploy-867d4477d7-xfqs6   1/1     Running   0          25m
+
+
+PS C:\Kubernetes> kubectl get service
+NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+cluster-ip-service   ClusterIP   10.96.26.252    <none>        80/TCP         26m
+kubernetes           ClusterIP   10.96.0.1       <none>        443/TCP        2d22h
+nodeport-service     NodePort    10.96.169.182   <none>        80:30080/TCP   78s
+
+
+PS C:\Kubernetes> kubectl get endpoints nodeport-service
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME               ENDPOINTS                                      AGE
+nodeport-service   10.244.0.42:80,10.244.0.43:80,10.244.0.44:80   2m15s
+
+
+PS C:\Kubernetes> kubectl get nodes -o wide
+NAME                    STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                         KERNEL-VERSION                     CONTAINER-RUNTIME
+desktop-control-plane   Ready    control-plane   2d22h   v1.34.3   172.19.0.2    <none>        Debian GNU/Linux 12 (bookworm)   6.6.87.2-microsoft-standard-WSL2   containerd://2.2.0
+
+
+PS C:\Kubernetes> kubectl port-forward service/nodeport-service 8080:80
+Forwarding from 127.0.0.1:8080 -> 80
+Forwarding from [::1]:8080 -> 80
+Handling connection for 8080
+Handling connection for 8080
+
+===================================================================================================
+
+
+
+
+
+
+
+

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster-ip-service
+  labels:
+    env: cluster-ip
+spec:
+  type: ClusterIP
+  selector:
+    env: dep-pod
+  ports:
+  - port: 80
+    targetPort: 80
+
+    
