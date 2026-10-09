@@ -1,0 +1,69 @@
+multi container pod
+
+A Multi-Container Pod is a Kubernetes Pod that contains two or more containers running together inside the same Pod.
+These containers work together to complete a task. They share the same network environment and can communicate with each other using localhost.
+
+
+Container 1 — Application: Runs your website.
+Container 2 — Sidecar: Collects application logs and helps send them to a logging system.
+Both containers run inside the same Pod.
+
+
+Let's create a Pod with two containers:
+Nginx: Runs a web server.
+BusyBox: Writes a message to a shared file every five seconds.
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-container-pod
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: shared-data
+      mountPath: /usr/share/nginx/html
+
+  - name: helper-container
+    image: busybox:1.28
+    command:
+    - sh
+    - -c
+    - |
+      while true; do
+        echo "Hello from helper container" >> /data/index.html
+        sleep 5
+      done
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+
+  volumes:
+  - name: shared-data
+    emptyDir: {}
+
+
+
+kubectl apply -f multi-container-pod.yaml
+kubectl get pod multi-container-pod
+kubectl logs multi-container-pod -c helper-container
+kubectl port-forward pod/multi-container-pod 8080:80
+curl.exe http://localhost:8080
+
+
+
+
+
+
+    volumeMounts:
+    - name: shared-data
+      mountPath: /usr/share/nginx/html
+
+
+volumeMounts:	Lists storage volumes that this container can access.
+- name: shared-data	Refers to the volume named shared-data.
+mountPath: /usr/share/nginx/html	Makes that volume accessible at this directory inside the Nginx container.
