@@ -72,5 +72,56 @@ Handling connection for 8080
 
 
 
+Kubectl Inspection &amp; Information Commands
+
+**kubectl explain service** / **kubectl explain svc**
+**kubectl get svc** / **kubectl get service**
+kubectl describe service
+kubectl describe service nodeport-svc
+kubectl delete service
+
+
+1. Basic Service Commands
+kubectl get services    => Shows all Services.
+kubectl get svc        => Short form of get services.
+kubectl get svc -o wide  => Shows additional information.
+kubectl describe service <service-name>  =>  Shows detailed information about a Service.
+kubectl get svc <service-name> -o yaml  =>   Shows the complete Service YAML.
+kubectl delete service <service-name>   =>   Deletes a Service.
+
+
+2. Create a ClusterIP Service
+kubectl expose deployment nginx --port=80 --target-port=80    => This creates a ClusterIP Service.
+kubectl get svc          
+kubectl expose deployment nginx --port=80 --target-port=80 --type=ClusterIP    => You can also explicitly specify the type:
+
+
+
+
+3. Create a NodePort Service
+kubectl expose deployment nginx --port=80 --target-port=80 --type=NodePort => Check the assigned NodePort:
+kubectl get svc
+
+
+4. Create a LoadBalancer Service
+kubectl expose deployment nginx --port=80 --target-port=80 --type=LoadBalancer
+kubectl get svc
+kubectl get svc nginx
+kubectl get svc -w        Watch until an external IP/hostname is assigned:
+
+
+5. Check Service Endpoints
+kubectl get endpoints
+
+
+6. Check Service → Pod Connection
+
+
+
+
+
+
+
+
 
 

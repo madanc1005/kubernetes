@@ -1,0 +1,42 @@
+kubectl get namespace or ns  => return the name space
+
+kubectl get all --namespace=kube-system => return all the content running or in that perticular ns      --namespace = -n 
+
+
+apiVersion: v1                   creating ns                           k create ns demo
+kind: Namespace
+metadata: 
+  name: demo 
+
+kubectl deletd ns/demo = delete
+
+
+kubectl create deploy nginx-demo --image=nginx -n demo    => creating deploy
+
+kubectl get deploy -n demo => get deploy from demo namespace
+
+kubectl scale --replicas=3 deploy/nginx-demo  -n demo   => scaling the pods 
+
+kubectl expose deploy/nginx-demo --name=svc-test --port 80 -n demo    => exposing
+
+kubectl exec -it podname -n demo --sh => getting into the pod
+
+cat etc/resolve.conf
+
+
+
+
+kubectl create deploy nginx-deploy --image nginx --replicas 5 
+kubectl expose deploy nginx-deploy --port 80 --target-port 80 --type ClusterIP
+
+
+
+
+
+kubectl config set-context --current --namespace=dev  => Set dev as the current namespace for your kubectl context:
+kubectl config set-context --current --namespace=default => To switch back to the default namespace:
+
+
+
+kubectl create deploy nginx-deploy --image nginx --replicas 5 --dry-run=client -o yaml
+kubectl expose deploy nginx-deploy --port 80 --target-port 80 --type ClusterIP --dry-run=client -o yaml
