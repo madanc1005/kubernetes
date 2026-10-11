@@ -1,0 +1,172 @@
+1. What is a Taint?
+A Taint is applied to a Node to prevent certain Pods from being scheduled on it.
+
+2. What is a Toleration?
+A Toleration is added to a Pod to allow it to be scheduled on a Node that has a matching taint.
+
+adding taints to the 2 worker node
+
+PS C:\Kubernetes> kubectl taint node desktop-worker gpu=true:NoSchedule    
+node/desktop-worker tainted
+PS C:\Kubernetes> kubectl taint node desktop-worker2 gpu=false:NoSchedule
+node/desktop-worker2 tainted
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+
+PS C:\Kubernetes> kubectl apply -f .\demo.yaml          
+pod/nginx-pod created
+running the above yaml file and actually its run but it wont allocate to any on the node it will stays as pending u can see the bellow
+
+PS C:\Kubernetes> kubectl get pods            
+NAME        READY   STATUS    RESTARTS   AGE
+nginx-pod   0/1     Pending   0          2m23s
+
+PS C:\Kubernetes> kubectl describe pods nginx-pod
+Events:
+  Type     Reason            Age    From               Message
+  ----     ------            ----   ----               -------
+  Warning  FailedScheduling  2m57s  default-scheduler  0/3 nodes are available: 3 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.
+
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod1
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  tolerations:
+  - key: "gpu"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+
+runnind the above yaml as 
+PS C:\Kubernetes> kubectl apply -f .\demo1.yaml  
+pod/nginx-pod configured
+
+PS C:\Kubernetes> kubectl get pods
+NAME         READY   STATUS    RESTARTS   AGE
+nginx-pod    0/1     Pending   0          15s
+nginx-pod1   1/1     Running   0          9s
+PS C:\Kubernetes> 
+
+the pode which is created now is running because of this code 
+
+  tolerations:
+  - key: "gpu"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+
+the above code is the tolleration for the taint gpu=true
+
+
+PS C:\Kubernetes> kubectl get pods -o wide
+NAME         READY   STATUS    RESTARTS   AGE    IP            NODE             NOMINATED NODE   READINESS GATES
+nginx-pod    0/1     Pending   0          118s   <none>        <none>           <none>           <none>
+nginx-pod1   1/1     Running   0          112s   10.244.2.10   desktop-worker   <none>           <none>
+PS C:\Kubernetes> 
+
+now nginx-pod1 i srunning in the desktop-worker 
+
+let us run the nginx-pod in the desktop-worker2 
+    to do this we have to know the taint of the desktop-worker2
+
+
+PS C:\Kubernetes> kubectl describe node desktop-worker2 | grep -iA 2 taints
+Taints:             gpu=false:NoSchedule
+Unschedulable:      false
+Lease:
+
+
+gpu=false:NoSchedule this is the taints of the desktop-worker2 
+
+so now convert the code from this 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+
+    to
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod1
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  tolerations:
+  - key: "gpu"
+    operator: "Equal"
+    value: "false"
+    effect: "NoSchedule"
+
+
+PS C:\Kubernetes> kubectl get pods 
+NAME         READY   STATUS    RESTARTS   AGE
+nginx-pod    0/1     Pending   0          13m
+nginx-pod1   1/1     Running   0          13m
+PS C:\Kubernetes> 
+
+
+PS C:\Kubernetes> kubectl delete pods nginx-pod
+pod "nginx-pod" deleted from default namespace
+PS C:\Kubernetes> 
+
+
+PS C:\Kubernetes> kubectl get pods             
+NAME         READY   STATUS    RESTARTS   AGE
+nginx-pod1   1/1     Running   0          13m
+PS C:\Kubernetes> 
+
+
+now runn the file 
+
+PS C:\Kubernetes> kubectl apply -f .\demo.yaml 
+pod/nginx-pod created
+PS C:\Kubernetes> 
+
+PS C:\Kubernetes> kubectl get pods            
+NAME         READY   STATUS    RESTARTS   AGE
+nginx-pod    1/1     Running   0          10s
+nginx-pod1   1/1     Running   0          14m
+PS C:\Kubernetes> 
+
+
+
+the same process can done using the labels
+
+1) we have to labe; the node 
+  kubectl label naode node-name gpu=true 
+
+2) we have to include the node selector in the pod yaml
+  nodeSelector:
+    gpu: "false"
+
+when ever we execute the pod yaml the pod will search for the node which hase a label "gpu: "false"" then it will run in that node
