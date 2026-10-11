@@ -1,0 +1,20 @@
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: daemonset                #this will be the name for the daemonset
+  labels:
+    app: web
+    version: v1
+spec:
+  selector:
+    matchLabels:
+      app: nginx-daemon          #the daemonset will create the pods with this label
+  template:
+    metadata:
+      labels:
+        app: nginx-daemon        #because of the above reasion we need to give the same label here 
+    spec:
+      containers:
+      - name: web
+        image: nginx
