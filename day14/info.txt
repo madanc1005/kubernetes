@@ -1,0 +1,43 @@
+1) we have to create the private key of of the user
+        openssl genrsa -out obito.key 2048 => this will will creates the private key called obito.key
+
+2) using the generated private key we need to generate the certificate signing request 
+        openssl req -new -key obito.key -out obito.csr -subj "/CN=obito" => this will create that file
+
+3) the aboce command wil generate this obito.csr file its a request but it is in encreapted form so we need to decreapt that one 
+        cat obito.csr | base64 | tr -d "\n" copy and pst it in the request: field which is in the yml file which is we r going to generate now
+
+4) generate the yml file to make the REQUEST use kubectl api-resources for referance
+
+        apiVersion: certificates.k8s.io/v1
+        kind: CertificateSigningRequest
+        metadata:
+          name: obito
+        spec:
+          request: here past the decoded request
+          signerName: kubernetes.io/kube-apiserver-client
+          expirationSeconds: 864000000
+          usages:
+          - client auth
+    
+    rum the above yml
+
+4)  run the following commands
+
+        PS C:\Kubernetes> kubectl get csr                     
+        NAME    AGE     SIGNERNAME                            REQUESTOR          REQUESTEDDURATION   CONDITION
+        obito   2m32s   kubernetes.io/kube-apiserver-client   kubernetes-admin   27y                 Pending
+        PS C:\Kubernetes> 
+
+
+        PS C:\Kubernetes> kubectl certificate approve obito
+        certificatesigningrequest.certificates.k8s.io/obito approved
+        PS C:\Kubernetes> 
+
+
+5) decode the content 
+        now we generated certificate-yml.yml file in that file there i sa fild called certificate copy the value and decode the value
+        and store that value in the obito-certificate.key
+ 
+
+
