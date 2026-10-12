@@ -1,0 +1,57 @@
+ConfigMap in Kubernetes
+
+A ConfigMap in Kubernetes is used to store configuration data separately from your application code and Docker image.
+
+For example, suppose your application needs to know which environment it is running in, which port to use, or the database server address. You can store these values in a ConfigMap and provide them to your Pods.
+
+
+this is how to create the configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config1
+data: 
+  APP_ENV: "development"
+  APP_PORT: "8080"
+  LOG_LEVEL: "info"
+  ENV: "testing"
+
+
+this is how to inject the config file to the pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  containers:
+  - name: pod1
+    image: nginx
+    envFrom:
+    - configMapRef:
+        name: config1
+
+
+
+
+
+PS C:\Kubernetes> kubectl apply -f .\config.yml    
+configmap/config1 created
+PS C:\Kubernetes> kubectl apply -f .\demo.yml  
+pod/pod1 created
+PS C:\Kubernetes> kubectl get cm             
+NAME               DATA   AGE
+config1            4      20s
+kube-root-ca.crt   1      47h
+PS C:\Kubernetes> kubectl get pod
+NAME   READY   STATUS    RESTARTS   AGE
+pod1   1/1     Running   0          17s
+PS C:\Kubernetes> kubectl exec -it pod1 -- /bin/bash
+root@pod1:/# echo $APP_ENV
+development
+root@pod1:/# echo $APP_ENV
+development
+root@pod1:/# echo $APP_PORT
+8080
+root@pod1:/# echo $ENV     
+testing
+root@pod1:/# 

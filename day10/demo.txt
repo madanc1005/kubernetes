@@ -1,0 +1,136 @@
+
+
+1. What is a Resource Request?
+A request is the amount of CPU or memory Kubernetes reserves for a container when deciding which Node (server) should run it on.
+
+For example:
+- CPU request: 500m (half a CPU core)
+- Memory request: 256Mi (256 MiB of memory)
+
+
+
+2. What is a Resource Limit?
+A limit is the maximum amount of CPU or memory a container is allowed to use.
+
+For example:
+- CPU limit: 1 (one CPU core)
+- Memory limit: 512Mi (512 MiB of memory)
+
+
+
+1) works fine
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-management-demo1
+spec:
+  containers:
+    - name: container1
+      image: polinux/stress
+      resources:
+        requests:
+          memory: "100Mi"
+        limits:
+          memory: "200Mi"
+      command: ["stress"]
+      args: ["--vm", "1", "--vm-bytes", "150M", "--vm-hang", "1"]
+
+this will run with out any error
+
+
+PS C:\Kubernetes> kubectl apply -f .\demo1.yaml
+pod/memory-management-demo1 created
+PS C:\Kubernetes> kubectl get pod              
+NAME                      READY   STATUS    RESTARTS   AGE
+memory-management-demo1   1/1     Running   0          17s
+PS C:\Kubernetes> 
+
+
+
+
+
+
+
+
+
+2) killed due to out oof memory
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-management-demo2
+spec:
+  containers:
+  - name: container2
+    image: polinux/stress
+    resources:
+      requests:
+        memory: "100Mi"
+      limits:
+        memory: "200Mi"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "3000M", "--vm-hang", "1"]
+
+
+
+PS C:\Kubernetes> kubectl get pod                           
+NAME                      READY   STATUS    RESTARTS   AGE
+memory-management-demo1   1/1     Running   0          15m
+PS C:\Kubernetes> kubectl apply -f .\demo2.yaml             
+pod/memory-management-demo2 created
+PS C:\Kubernetes> kubectl get pod              
+NAME                      READY   STATUS              RESTARTS   AGE
+memory-management-demo1   1/1     Running             0          16m
+memory-management-demo2   0/1     ContainerCreating   0          2s
+PS C:\Kubernetes> kubectl get pod
+NAME                      READY   STATUS      RESTARTS   AGE
+memory-management-demo1   1/1     Running     0          16m
+memory-management-demo2   0/1     OOMKilled   0          8s
+PS C:\Kubernetes> kubectl describe pod memory-management-demo2
+
+
+
+
+
+
+3) pod will be in the pending state 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-management-demo3
+spec:
+  containers:
+  - name: container3
+    image: polinux/stress
+    resources:
+      requests:
+        memory: "100000Mi"
+      limits: 
+        memory: "100000Mi"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "250M", "--vm-hang", "1"]
+
+
+
+PS C:\Kubernetes> kubectl get pod                             
+NAME                      READY   STATUS             RESTARTS      AGE
+memory-management-demo1   1/1     Running            0             23m
+memory-management-demo2   0/1     CrashLoopBackOff   6 (66s ago)   7m15s
+PS C:\Kubernetes> kubectl apply -f .\demo3.yaml               
+pod/memory-management-demo3 created
+PS C:\Kubernetes> kubectl get pod              
+NAME                      READY   STATUS             RESTARTS       AGE
+memory-management-demo1   1/1     Running            0              23m
+memory-management-demo2   0/1     CrashLoopBackOff   6 (100s ago)   7m49s
+memory-management-demo3   0/1     Pending            0              14s
+PS C:\Kubernetes> kubectl describe pod memory-management-demo3
+Warning  FailedScheduling  73s   default-scheduler  0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 Insufficient memory. no new claims to deallocate, preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.
+
+this is happening because of this 
+    resources:
+      requests:
+        memory: "100000Mi"
+      limits: 
+        memory: "100000Mi"
+
+the computer dosent have this much of memory "100000Mi" so its showing Insufficient memory.

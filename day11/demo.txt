@@ -1,0 +1,3 @@
+Auto Scaling
+
+Auto Scaling in Kubernetes means automatically increasing or decreasing resources based on the application's workload.
