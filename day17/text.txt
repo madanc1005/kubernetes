@@ -1,0 +1,5 @@
+key=value
+madan=gowda
+color=pink
+obito=uchiha
+my-life=obito-life

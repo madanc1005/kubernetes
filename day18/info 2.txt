@@ -1,0 +1,155 @@
+continued
+
+1) we have to create a cluster without CNI
+
+        kind: Cluster
+        apiVersion: kind.x-k8s.io/v1alpha4
+        nodes:
+        - role: control-plane
+        extraPortMappings:
+        - containerPort: 30001
+            hostPort: 30001
+        - role: worker
+        - role: worker
+        networking:
+        disableDefaultCNI: true
+        podSubnet: 192.168.0.0/16
+
+                or 
+                remove this part change the current cluster policy but it ill effect to the other work do if nessary
+
+
+2) now we have to configur the Network policy
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+        name: db-test
+        spec:
+        podSelector:
+            matchLabels:
+            role: db-role
+        policyTypes:
+        - Ingress
+        ingress:
+        - from:
+            - podSelector:
+                matchLabels:
+                role: backend
+            ports:
+            - port: 3306
+
+
+
+3.1) exec to backend
+        PS C:\Kubernetes>  kubectl exec -it backend-pod -- /bin/bash  
+        root@backend-pod:/# 
+
+3.2) curl to frontend
+        root@backend-pod:/# curl frontend-service:80                                           
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <title>Welcome to nginx!</title>
+        <style>
+        html { color-scheme: light dark; }
+        body { width: 35em; margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif; }
+        </style>
+        </head>
+        <body>
+        <h1>Welcome to nginx!</h1>
+        <p>If you see this page, nginx is successfully installed and working.
+        Further configuration is required for the web server, reverse proxy, 
+        API gateway, load balancer, content cache, or other features.</p>
+
+        <p>For online documentation and support please refer to
+        <a href="https://nginx.org/">nginx.org</a>.<br/>
+        To engage with the community please visit
+        <a href="https://community.nginx.org/">community.nginx.org</a>.<br/>
+        For enterprise grade support, professional services, additional 
+        security features and capabilities please refer to
+        <a href="https://f5.com/nginx">f5.com/nginx</a>.</p>
+
+        <p><em>Thank you for using nginx.</em></p>
+        </body>
+        </html>
+        root@backend-pod:/# 
+
+3.3) connect to db
+
+            root@backend-pod:/# telnet db-service 3306
+            Trying 10.96.210.109...
+            Connected to db-service.
+            Escape character is '^]'.
+            J
+            26.7.0  ,n&5Mp�`g4H}.l
+                                jHa<caching_sha2_password2#08S01Got timeout reading communication packetsConnection closed by foreign host.
+            root@backend-pod:/# 
+
+
+
+
+
+
+
+
+
+
+
+
+4.1) exec to frontend
+        PS C:\Kubernetes> kubectl exec -it frontend-pod -- /bin/bash                       
+        root@frontend-pod:/#
+
+4.2) curl to backend
+        root@frontend-pod:/# curl backend-service:80
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <title>Welcome to nginx!</title>
+        <style>
+        html { color-scheme: light dark; }
+        body { width: 35em; margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif; }
+        </style>
+        </head>
+        <body>
+        <h1>Welcome to nginx!</h1>
+        <p>If you see this page, nginx is successfully installed and working.
+        Further configuration is required for the web server, reverse proxy, 
+        API gateway, load balancer, content cache, or other features.</p>
+
+        <p>For online documentation and support please refer to
+        <a href="https://nginx.org/">nginx.org</a>.<br/>
+        To engage with the community please visit
+        <a href="https://community.nginx.org/">community.nginx.org</a>.<br/>
+        For enterprise grade support, professional services, additional 
+        security features and capabilities please refer to
+        <a href="https://f5.com/nginx">f5.com/nginx</a>.</p>
+
+        <p><em>Thank you for using nginx.</em></p>
+        </body>
+        </html>
+
+4.3) connect to db
+        root@frontend-pod:/# telnet db-service 3306
+        Trying 10.96.210.109...
+        telnet: Unable to connect to remote host: Connection timed out
+        root@frontend-pod:/#
+
+
+
+5) this is how u allow all the traffic 
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+        name: allow-all
+        spec:
+        podSelector: {}
+        policyTypes:
+        - Ingress
+        - Egress
+        ingress:
+        - {}
+        egress:
+        - {}

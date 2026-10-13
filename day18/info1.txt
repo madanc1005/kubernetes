@@ -1,0 +1,209 @@
+Network policies
+
+Network policies are rules that control who can communicate with whom over a network and what communication is allowed or blocked.
+
+CNI stands for Container Network Interface. It is used in Kubernetes to provide network connectivity to containers and Pods.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend-pod
+  labels:
+    role: frontend-role
+spec:
+  containers:
+  - name: frontend-container
+    image: nginx
+    ports:
+    - name: http
+      containerPort: 80
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  labels:
+    role: frontend-service-role
+spec:
+  selector:
+    role: frontend-role
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend-pod
+  labels:
+    role: backend-role
+spec:
+  containers:
+  - name: backend-container
+    image: nginx
+    ports:
+    - name: http
+      containerPort: 80
+      protocol: TCP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  labels:
+    role: backend-service-role
+spec:
+  selector: 
+    role: backend-role
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+
+  
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: db-pod
+  labels:
+    role: db-role
+spec:
+  containers:
+  - name: db-container
+    image: mysql
+    env:
+    - name: "MYSQL_USER"
+      value: "mysql"
+    - name: "MYSQL_PASSWORD"
+      value: "mysql"
+    - name: "MYSQL_DATABASE"
+      value: "testdb"
+    - name: "MYSQL_ROOT_PASSWORD"
+      value: "verysecure"
+    ports:
+    - name: mysql
+      containerPort: 3306
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+  labels:
+    role: db-service-role
+spec:
+  selector:
+    role: db-role
+  ports:
+  - protocol: TCP
+    targetPort: 3306
+    port: 3306
+
+the above one is the file which we need to run for get to know how the inbuilt cni works
+
+
+1) run the file and get pods and svc
+        PS C:\Kubernetes\day18> kubectl apply -f .\deploy.yml
+        pod/frontend-pod unchanged
+        service/frontend-service unchanged
+        pod/backend-pod unchanged
+        service/backend-service unchanged
+        pod/db-pod created
+        service/db-service unchanged
+
+        PS C:\Kubernetes\day18> kubectl get pods             
+        NAME           READY   STATUS    RESTARTS   AGE
+        backend-pod    1/1     Running   0          18m
+        db-pod         1/1     Running   0          15m
+        frontend-pod   1/1     Running   0          18m
+        PS C:\Kubernetes\day18> kubectl get svc 
+        NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+        backend-service    ClusterIP   10.96.205.116   <none>        80/TCP     33m
+        db-service         ClusterIP   10.96.229.156   <none>        3306/TCP   25m
+        frontend-service   ClusterIP   10.96.169.161   <none>        80/TCP     20m
+        kubernetes         ClusterIP   10.96.0.1       <none>        443/TCP    3d1h
+        PS C:\Kubernetes\day18> 
+
+
+
+2.1)  exec to frontend 
+        PS C:\Kubernetes> kubectl exec -it frontend-pod -- /bin/bash
+
+2.2)  curl to backend
+        root@frontend-pod:/# curl backend-service:80
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <title>Welcome to nginx!</title>
+        <style>
+        html { color-scheme: light dark; }
+        body { width: 35em; margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif; }
+        </style>
+        </head>
+        <body>
+        <h1>Welcome to nginx!</h1>
+        <p>If you see this page, nginx is successfully installed and working.
+        Further configuration is required for the web server, reverse proxy, 
+        API gateway, load balancer, content cache, or other features.</p>
+
+        <p>For online documentation and support please refer to
+        <a href="https://nginx.org/">nginx.org</a>.<br/>
+        To engage with the community please visit
+        <a href="https://community.nginx.org/">community.nginx.org</a>.<br/>
+        For enterprise grade support, professional services, additional 
+        security features and capabilities please refer to
+        <a href="https://f5.com/nginx">f5.com/nginx</a>.</p>
+
+        <p><em>Thank you for using nginx.</em></p>
+        </body>
+        </html>
+
+2.3)   connect to db
+
+            apt-get update
+            apt-get install -y telnet
+            apt-get install -y inetutils-telnet
+
+            root@frontend-pod:/# telnet db-service 3306
+            Trying 10.96.229.156...
+            Connected to db-service.
+            Escape character is '^]'.
+            J
+            26.7.0
+                    nmFS
+                        ]�r=:6d.JB'caching_sha2_passwordmysql
+            !#08S01Got packets out of orderConnection closed by foreign host.
+            root@frontend-pod:/# 
+
+
+
+
+
+
+3)  do the same thing from the bcakend pod
+    3.1) curl to frontend
+    3.2) connect to db
+
+
+
+this is how it works but what we want is 
+
+backend need to connect to the both frontend and db
+but 
+frontend only need to connect to the dackend not to db 
+
+continue in info2.txt
+

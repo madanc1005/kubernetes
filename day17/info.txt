@@ -1,0 +1,73 @@
+Secrets
+In Kubernetes, a Secret is an object used to store sensitive information, such as passwords, usernames, API tokens, and database credentials
+
+
+1. Why do we need Secrets?
+            Imagine you have a web application running inside a Kubernetes Pod. Your application needs to connect to a MySQL database.
+            To connect, it needs a username and password.
+
+                                Web Application
+                                Running inside a Kubernetes Pod
+                                        |
+                                Kubernetes Secret
+                                Database username and password
+                                        |
+                                MySQL Database
+                                Authenticates the application
+
+
+2. What information can a Secret store?
+                Examples include:
+                - Database usernames and passwords
+                - Docker registry credentials
+                - API keys
+                - Authentication tokens
+                - TLS certificates and private keys
+
+                k rollout restart deployment deploy-name
+
+
+3) create the secret 
+
+            PS C:\Kubernetes\day17> kubectl create secret generic my-secret --from-env-file=./text.txt --dry-run=client -o yaml
+            apiVersion: v1
+            data:
+            color: cGluaw==
+            key: dmFsdWU=
+            madan: Z293ZGE=
+            my-life: b2JpdG8tbGlmZQ==
+            obito: dWNoaWhh
+            kind: Secret
+            metadata:
+            name: my-secret
+            PS C:\Kubernetes\day17> kubectl create secret generic my-secret --from-env-file=./text.txt                         
+            secret/my-secret created
+            PS C:\Kubernetes\day17> 
+
+
+4) create a pod and mount it 
+            apiVersion: v1
+            kind: Pod
+            metadata:
+            name: my-app
+            spec:
+            containers:
+                - name: app
+                image: nginx
+                volumeMounts:
+                    - name: secret-volume
+                    mountPath: /etc/db-secret
+                    readOnly: true
+            volumes:
+                - name: secret-volume
+                secret:
+                    secretName: my-secret
+
+
+5) exec into pod and and do ls etc/db-secret/
+
+            PS C:\Kubernetes\day17> kubectl exec -it my-app -- /bin/bash
+            root@my-app:/# ls etc/d     
+            db-secret/      debconf.conf    debian_version  default/        dpkg/           
+            root@my-app:/# ls etc/db-secret/
+            color  key  madan  my-life  obito

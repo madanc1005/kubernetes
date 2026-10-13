@@ -1,0 +1,84 @@
+service account 
+
+types of users
+1 human users
+2 service account used by bots for example jenkins like webhook things
+when we create a cluster there will be default service account
+
+1)  create a service account
+
+        PS C:\Kubernetes\day16> kubectl create sa service-account1
+        serviceaccount/service-account1 created
+        PS C:\Kubernetes\day16> 
+
+2)create a role
+        PS C:\Kubernetes\day16> kubectl create role sa-role --verb=list,get,watch --resource=pod --dry-run=client -o yaml
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: Role
+        metadata:
+        name: sa-role
+        rules:
+        - apiGroups:
+        - ""
+        resources:
+        - pods
+        verbs:
+        - list
+        - get
+        - watch
+        PS C:\Kubernetes\day16> kubectl create role sa-role --verb=list,get,watch --resource=pod --dry-run=client -o yaml > role.yml
+
+
+3) create a role binding
+        PS C:\Kubernetes\day16> kubectl create rolebinding sa-binding --role=sa-role --serviceaccount=default:service-account1 --dry-run=client -o yaml > binding.yaml
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: RoleBinding
+        metadata:
+        name: sa-binding
+        roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: sa-role
+        subjects:
+        - apiGroup: rbac.authorization.k8s.io
+        kind: ServiceAccount
+        name: service-account1
+        PS C:\Kubernetes\day16> kubectl create rolebinding sa-binding --role=sa-role --user=service-account1 --dry-run=client -o yaml > binding.yaml
+
+
+4)run the files 
+        PS C:\Kubernetes\day16> kubectl auth can-i get pods --as service-account1                                                                   
+        no
+        PS C:\Kubernetes\day16> kubectl apply -f .\role.yml                      
+        role.rbac.authorization.k8s.io/sa-role created
+        PS C:\Kubernetes\day16> kubectl apply -f .\binding.yaml
+        rolebinding.rbac.authorization.k8s.io/sa-binding created
+        PS C:\Kubernetes\day16> kubectl auth can-i get pods --as service-account1
+        yes
+        PS C:\Kubernetes\day16> 
+
+
+
+5)  create a pode with serviceAccountName: service-account1
+        apiVersion: v1
+        kind: Pod
+        metadata:
+        labels:
+            run: sa-pod
+        name: sa-pod
+        spec:
+        serviceAccountName: service-account1
+        containers:
+        - image: nginx
+            name: sa-pod
+
+
+PS C:\Kubernetes\day16> kubectl apply -f .\demo.yaml
+pod/sa-pod created
+PS C:\Kubernetes\day16> 
+
+
+kubectl delete pod sa-pod
+kubectl delete sa service-account1
+
+

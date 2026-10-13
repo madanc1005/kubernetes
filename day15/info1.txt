@@ -1,0 +1,36 @@
+there are 2 types of schope when it comes to permissions 
+1)namespace schope => pod,rs,rc,deploy, => rolebinding
+2)cluster schope => namespace,node => cluster rolebinding
+
+kubectl api-resources ns=true => list the resources at the ns level
+
+kubectl api-resources ns=false => list the resources at the cluster level
+
+
+kubectl create clusterrole role-test --verb=list,get,watch --resource=node
+
+
+kubectl create clusterrolebinding clusterrolebinding1 --clusterrole=role-test --user=obito
+
+
+
+PS C:\Kubernetes> kubectl create clusterrole role-test --verb=list,get,watch --resource=node
+clusterrole.rbac.authorization.k8s.io/role-test created
+
+PS C:\Kubernetes> kubectl auth can-i get nodes            
+Warning: resource 'nodes' is not namespace scoped
+
+yes
+PS C:\Kubernetes> kubectl auth can-i get nodes --as obito
+Warning: resource 'nodes' is not namespace scoped
+
+no
+PS C:\Kubernetes> kubectl create clusterrolebinding clusterrolebinding1 --clusterrole=role-test --user=obito
+clusterrolebinding.rbac.authorization.k8s.io/clusterrolebinding1 created
+PS C:\Kubernetes> kubectl auth can-i get nodes --as obito                                                   
+Warning: resource 'nodes' is not namespace scoped
+
+yes
+PS C:\Kubernetes> 
+
+
