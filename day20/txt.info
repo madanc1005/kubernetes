@@ -1,0 +1,93 @@
+apiVersion: v1
+kind:pod
+metadata:
+  name: empty-mount
+spec:
+  containers:
+  - name: c1
+    image: nginx
+    volumeMounts:
+    - name: v1
+    mountPath: /data
+  volumes:
+  - name: v1
+  emptyDir:{}
+
+
+
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath
+spec:
+  containers:
+  - name: c1
+    image: nginx
+    volumeMounts:
+    - name: v2
+      mountPath: /data
+  volumes:
+  - name: v2
+    hostPath:
+      path: temp/mydata
+      type: DirectoryOrCreate
+
+
+
+
+
+
+
+
+apiVersion: v1
+kind: PersistentVolume 
+metadata:
+  name: pv
+spec:
+  capacity:
+    storage:10gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /var/data
+    type: DirectoryOrCreate
+  
+
+
+apiVersion: v1
+kind: persistentVolumeclaim
+metadata:
+  name: pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: manual
+  resources:
+    request:
+      storage: 1gi
+  
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - name: c3
+    image: nginx
+    volumeMounts:
+    - name: mount
+      mountPath: /data
+  volumes:
+  - name: mount
+    persistentVolumeclaim:
+    claimName: pvc
+    
+  
+
+
+
+

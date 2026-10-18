@@ -1,0 +1,40 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: base-deploy
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+      name: base-deploy
+  template:
+    metadata:
+      name: base-pod
+      labels:
+        name: base-deploy
+        base-pod: base-service
+    spec:
+      containers:
+      - name: base-container
+        image: nginx
+
+        resources:
+          requests:
+            memory: "500Mi"
+          limits:
+            memory: "500Gi"
+
+        ports:
+        - containerPort: 80
+        
+        volumeMounts:
+        - name: volume1
+          mountPath: /usr/share/nginx/html
+        
+        
+      
+      volumes:
+      - name: volume1
+        configMap:
+          name: kube-config
+      

@@ -1,0 +1,18 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: base-deploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: base-container
+        image: nginx
+        resources:
+          requests:
+            memory: "500Mi"
+          limits:
+            memory: "1Gi"
+
+
+      
