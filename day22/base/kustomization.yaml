@@ -1,0 +1,13 @@
+#kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1 
+kind: Kustomization 
+
+namespace: demo
+resources: 
+- deployment.yaml
+- service.yaml 
+
+configMapGenerator: 
+- name: enginex-config 
+  files: 
+    - index.html

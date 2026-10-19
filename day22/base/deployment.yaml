@@ -1,0 +1,34 @@
+#deployment.yaml
+apiVersion: apps/v1 
+kind: Deployment 
+metadata: 
+  name: enginex-deployment 
+spec: 
+  replicas: 1 
+  selector:
+    matchLabels: 
+      app: enginex 
+  template: 
+    metadata:
+      labels:
+        app: enginex 
+    spec: 
+      containers: 
+      - name: enginex 
+        image: nginx:1.21 
+        ports: 
+        - containerPort: 80 
+        resources: 
+          requests: 
+            memory: "128Mi" 
+            cpu: "100m" 
+          limits: 
+            memory: "256Mi" 
+            cpu: "250m" 
+        volumeMounts: 
+          - name: config-volume 
+            mountPath: /usr/share/nginx/html 
+      volumes: 
+      - name: config-volume 
+        configMap: 
+          name: enginex-config

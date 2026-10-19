@@ -1,0 +1,19 @@
+#kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1 
+kind: Kustomization 
+
+namePrefix: dev- 
+namespace: dev 
+
+resources: 
+- ../../base
+
+configMapGenerator: 
+- name: enginex-config 
+  behavior: replace 
+  files: 
+    - index.html 
+
+patches: 
+- path: replicas.yaml 
+- path: limits.yaml

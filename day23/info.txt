@@ -1,0 +1,183 @@
+# Create directories for PersistentVolumes
+sudo mkdir -p /mnt/data/mongodb-{0..4}
+sudo chmod 777 /mnt/data/mongodb-{0..4}
+
+
+Create a file named mongodb-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+  labels:
+    app: mongodb
+spec:
+  clusterIP: None  # This makes it a headless service
+  selector:
+    app: mongodb
+  ports:
+  - port: 27017
+    targetPort: 27017
+
+
+kubectl apply -f mongodb-service.yaml
+
+
+======================================================================
+
+
+Create a file named mongodb-storageclass.yaml
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mongodb-sc
+provisioner: kubernetes.io/no-provisioner  # No dynamic provisioning
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+
+kubectl apply -f mongodb-storageclass.yaml
+
+======================================================================
+
+Create a file named mongodb-pv.yaml:
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-mongodb-0
+  labels:
+    type: local
+spec:
+  storageClassName: mongodb-sc
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/mongodb-0"
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-mongodb-1
+  labels:
+    type: local
+spec:
+  storageClassName: mongodb-sc
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/mongodb-1"
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-mongodb-2
+  labels:
+    type: local
+spec:
+  storageClassName: mongodb-sc
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/mongodb-2"
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-mongodb-3
+  labels:
+    type: local
+spec:
+  storageClassName: mongodb-sc
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/mongodb-3"
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-mongodb-4
+  labels:
+    type: local
+spec:
+  storageClassName: mongodb-sc
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/mongodb-4"
+  persistentVolumeReclaimPolicy: Retain
+
+kubectl apply -f mongodb-pv.yaml
+
+================================================================
+
+Create a file named mongodb-statefulset.yaml:
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+spec:
+  serviceName: "mongodb-service"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:4.4
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "mongodb-sc"
+      resources:
+        requests:
+          storage: 1Gi
+
+kubectl apply -f mongodb-statefulset.yaml
+
+=====================================================================================
+Watch the Pods being created in order:
+kubectl get pods -w
+
+
+kubectl get pvc
+
+kubectl delete pod mongodb-0
+kubectl get pods -w
+
+
+Scale to 5 replicas:
+kubectl scale statefulset mongodb --replicas=5
+kubectl get pods -w
+
+kubectl get pvc
+
+
+

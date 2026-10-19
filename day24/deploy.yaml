@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: high-priority-pod
+spec:
+  containers:
+  - name: c1
+    image: nginx
+
+    resources:
+      requests:
+        memory: "120Mi"
+        cpu: "12"
+  priorityClassName: high-priority
